@@ -36,6 +36,15 @@ function getInitials(name: string | undefined) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
+function safeFormat(value: string | null | undefined, fmt: string, fallback = '') {
+  if (!value) return fallback
+  try {
+    const d = new Date(value)
+    if (isNaN(d.getTime())) return fallback
+    return format(d, fmt)
+  } catch { return fallback }
+}
+
 function humaniseStatus(value: string) {
   return APPLICANT_STATUSES.find(s => s.value === value)?.label || value
 }
@@ -328,7 +337,7 @@ export default function ApplicantDetailPage() {
               )}
             </div>
             <p className="text-[0.6875rem] text-gray-400 mt-2">
-              Applied {format(new Date(applicant.createdAt), 'dd MMM yyyy')}
+              Applied {safeFormat(applicant.createdAt, 'dd MMM yyyy')}
             </p>
           </div>
 
@@ -354,7 +363,7 @@ export default function ApplicantDetailPage() {
                   {applicant.assessmentDate && (
                     <span className="text-[0.625rem] text-gray-400 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {format(new Date(applicant.assessmentDate), 'EEE d MMM yyyy')}
+                      {safeFormat(applicant.assessmentDate, 'EEE d MMM yyyy')}
                     </span>
                   )}
                 </div>
@@ -598,7 +607,7 @@ function StageActions({
           <h3 className="text-sm font-semibold text-green-800">Enrolled</h3>
         </div>
         {applicant.enrolledDate && (
-          <p className="text-xs text-green-600">Enrolled on {format(new Date(applicant.enrolledDate), 'dd MMM yyyy')}</p>
+          <p className="text-xs text-green-600">Enrolled on {safeFormat(applicant.enrolledDate, 'dd MMM yyyy')}</p>
         )}
       </div>
     )
@@ -663,7 +672,7 @@ function StageActions({
               <button onClick={() => onCopyEmail(
                 emailTemplate(
                   'Your Assessment Invitation',
-                  `Thank you for applying to our college. We are pleased to invite you to attend an assessment.\n\nDate & Time: ${format(new Date(assessmentDate), 'EEEE d MMMM yyyy \'at\' HH:mm')}\nLocation: Please arrive at reception 10 minutes before your assessment.\n\nThe assessment covers English and Mathematics and takes approximately 30–45 minutes. Please bring a form of photo ID.`
+                  `Thank you for applying to our college. We are pleased to invite you to attend an assessment.\n\nDate & Time: ${safeFormat(assessmentDate, 'EEEE d MMMM yyyy \'at\' HH:mm')}\nLocation: Please arrive at reception 10 minutes before your assessment.\n\nThe assessment covers English and Mathematics and takes approximately 30–45 minutes. Please bring a form of photo ID.`
                 )
               )} className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 py-1.5 transition-colors">
                 {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -692,7 +701,7 @@ function StageActions({
               <div className="bg-blue-50 rounded-lg px-3 py-2.5 flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5 text-blue-600 flex-none" />
                 <p className="text-xs text-blue-700 font-medium">
-                  {format(new Date(applicant.assessmentDate), 'EEE d MMM yyyy \'at\' HH:mm')}
+                  {safeFormat(applicant.assessmentDate, 'EEE d MMM yyyy \'at\' HH:mm')}
                 </p>
               </div>
             )}
@@ -792,7 +801,7 @@ function StageActions({
               <button onClick={() => onCopyEmail(
                 emailTemplate(
                   'Interview Invitation',
-                  `Following your recent assessment, we are pleased to invite you to attend an interview for your course.\n\nDate & Time: ${format(new Date(interviewDate), 'EEEE d MMMM yyyy \'at\' HH:mm')}\nCourse: ${courses.find(c => c.course.id === applicant.matchedCourseId)?.course.name || 'TBC'}\n\nPlease bring any relevant certificates or qualifications. This interview usually takes 20–30 minutes.`
+                  `Following your recent assessment, we are pleased to invite you to attend an interview for your course.\n\nDate & Time: ${safeFormat(interviewDate, 'EEEE d MMMM yyyy \'at\' HH:mm')}\nCourse: ${courses.find(c => c.course.id === applicant.matchedCourseId)?.course.name || 'TBC'}\n\nPlease bring any relevant certificates or qualifications. This interview usually takes 20–30 minutes.`
                 )
               )} className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 py-1.5 transition-colors">
                 {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -808,7 +817,7 @@ function StageActions({
               <div className="bg-amber-50 rounded-lg px-3 py-2.5 flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5 text-amber-600 flex-none" />
                 <p className="text-xs text-amber-700 font-medium">
-                  {format(new Date(applicant.interviewDate), 'EEE d MMM yyyy \'at\' HH:mm')}
+                  {safeFormat(applicant.interviewDate, 'EEE d MMM yyyy \'at\' HH:mm')}
                 </p>
               </div>
             )}
