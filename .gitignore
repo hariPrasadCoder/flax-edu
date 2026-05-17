@@ -26,7 +26,18 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
+.env.local
 .env*.local
+
+# uploaded files (persistent volume in production)
+/public/uploads
+
+# playwright
+.playwright-mcp/
+
+# product docs
+FLAX_PRODUCT.md
 
 # vercel
 .vercel
