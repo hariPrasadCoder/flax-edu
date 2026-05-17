@@ -30,6 +30,9 @@ yarn-error.log*
 .env.local
 .env*.local
 
+# local uploads (no longer used - CVs stored in DB)
+/public/uploads
+
 # playwright
 .playwright-mcp/
 
