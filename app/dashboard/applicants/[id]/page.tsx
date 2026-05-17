@@ -31,7 +31,8 @@ type Applicant = {
 type Course = { course: { id: string; name: string; level: string; capacity: number | null }; applicantCount: number }
 type Event = { id: string; eventType: string; fromValue: string | null; toValue: string | null; actorName: string | null; metadata: Record<string, unknown> | null; createdAt: string }
 
-function getInitials(name: string) {
+function getInitials(name: string | undefined) {
+  if (!name) return '?'
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
