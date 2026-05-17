@@ -35,6 +35,7 @@ export const applicants = pgTable('applicants', {
   phone: text('phone'),
   cvUrl: text('cv_url'),
   cvText: text('cv_text'),
+  cvData: text('cv_data'), // base64-encoded PDF stored in DB
   status: text('status').default('applied').notNull(),
   source: text('source'), // website|walk-in|referral|open-day|phone|other
   interestedCourseId: uuid('interested_course_id'),

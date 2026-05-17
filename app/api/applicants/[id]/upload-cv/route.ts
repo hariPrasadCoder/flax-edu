@@ -3,8 +3,6 @@ import { getSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { orgMembers, applicants, applicantEvents } from '@/drizzle/schema'
 import { eq, and } from 'drizzle-orm'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(
@@ -29,18 +27,10 @@ export async function POST(
   if (file.type !== 'application/pdf') return NextResponse.json({ error: 'Only PDF files accepted' }, { status: 400 })
 
   const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+  const cvData = Buffer.from(bytes).toString('base64')
 
-  const uploadsDir = join(process.cwd(), 'public', 'uploads')
-  await mkdir(uploadsDir, { recursive: true })
-  const filename = `${params.id}-${Date.now()}.pdf`
-  await writeFile(join(uploadsDir, filename), buffer)
-
-  const cvUrl = `/uploads/${filename}`
-
-  // Store the URL - AI analysis reads the PDF directly (no text extraction needed)
   await db.update(applicants)
-    .set({ cvUrl, cvText: null, updatedAt: new Date() })
+    .set({ cvData, cvUrl: null, cvText: null, updatedAt: new Date() })
     .where(eq(applicants.id, params.id))
 
   await db.insert(applicantEvents).values({
@@ -49,8 +39,8 @@ export async function POST(
     actorId: session.id,
     actorName: session.name,
     eventType: 'cv_uploaded',
-    toValue: filename,
+    toValue: file.name,
   })
 
-  return NextResponse.json({ cvUrl })
+  return NextResponse.json({ success: true })
 }

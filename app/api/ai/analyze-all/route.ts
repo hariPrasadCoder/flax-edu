@@ -4,8 +4,6 @@ import { db } from '@/lib/db'
 import { orgMembers, applicants, courses, applicantEvents } from '@/drizzle/schema'
 import { eq } from 'drizzle-orm'
 import Anthropic from '@anthropic-ai/sdk'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -53,16 +51,10 @@ export async function POST() {
 
   for (const applicant of pending) {
     try {
-      let pdfBase64: string | null = null
-      if (applicant.cvUrl) {
-        try {
-          const buf = await readFile(join(process.cwd(), 'public', applicant.cvUrl))
-          pdfBase64 = buf.toString('base64')
-        } catch { /* no pdf on disk */ }
-      }
+      const pdfBase64 = applicant.cvData ?? null
 
       const promptText = `You are an admissions assistant for a UK Further Education college.
-${pdfBase64 ? "The applicant's CV is attached as a PDF. Read it carefully." : applicant.cvText ? `Applicant CV:\n${applicant.cvText}` : 'No CV provided.'}
+${pdfBase64 ? "The applicant's CV is attached as a PDF. Read it carefully." : 'No CV provided.'}
 
 Assessment Scores:
 - English: ${applicant.assessmentEnglishScore !== null ? `${applicant.assessmentEnglishScore}/10` : 'Not yet taken'}

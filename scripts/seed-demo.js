@@ -5,8 +5,6 @@
 const { neon } = require('@neondatabase/serverless')
 const { randomUUID } = require('crypto')
 const PDFDocument = require('pdfkit')
-const fs = require('fs')
-const path = require('path')
 
 const DB_URL = process.env.NEON_DATABASE_URL
 if (!DB_URL) { console.error('NEON_DATABASE_URL is required'); process.exit(1) }
@@ -517,29 +515,22 @@ async function main() {
     console.log(`   ✅ ${c.name} (${c.level})`)
   }
 
-  // 4. Create uploads dir
-  const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
-
-  // 5. Create applicants
+  // 4. Create applicants (PDFs stored as base64 in DB)
   console.log('\n👥 Creating applicants...')
   for (const a of APPLICANTS) {
     const applicantId = randomUUID()
 
-    // Generate + save PDF
+    // Generate PDF and encode as base64 for DB storage
     const pdfBuffer = await generateCV(a)
-    const filename = `${applicantId}-demo.pdf`
-    const pdfPath = path.join(uploadsDir, filename)
-    fs.writeFileSync(pdfPath, pdfBuffer)
+    const cvData = pdfBuffer.toString('base64')
 
-    const cvUrl = `/uploads/${filename}`
     const interestedCourseId = a.interestedCourse ? courseIdMap[a.interestedCourse] || null : null
     const matchedCourseId = a.matchedCourse ? courseIdMap[a.matchedCourse] || null : null
 
     await sql`
       INSERT INTO applicants (
         id, org_id, name, email, phone, status, source,
-        cv_url, cv_text,
+        cv_data, cv_url, cv_text,
         assessment_english_score, assessment_math_score,
         assessment_date, interview_date,
         interested_course_id, matched_course_id,
@@ -549,7 +540,7 @@ async function main() {
         ${applicantId}::uuid, ${orgId}::uuid,
         ${a.name}, ${a.email}, ${a.phone || null},
         ${a.status}, ${a.source || null},
-        ${cvUrl}, ${null},
+        ${cvData}, ${null}, ${null},
         ${a.assessmentEnglishScore ?? null}, ${a.assessmentMathScore ?? null},
         ${a.assessmentDate ?? null}, ${a.interviewDate ?? null},
         ${interestedCourseId}::uuid, ${matchedCourseId}::uuid,
@@ -568,7 +559,7 @@ async function main() {
       )
     `
 
-    console.log(`   ✅ ${a.name} (${a.status}) — CV saved to ${cvUrl}`)
+    console.log(`   ✅ ${a.name} (${a.status}) - CV stored in DB`)
   }
 
   console.log(`\n🎉 Seed complete!`)

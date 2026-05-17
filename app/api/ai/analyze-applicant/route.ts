@@ -4,8 +4,6 @@ import { db } from '@/lib/db'
 import { orgMembers, applicants, courses, applicantEvents } from '@/drizzle/schema'
 import { eq, and } from 'drizzle-orm'
 import Anthropic from '@anthropic-ai/sdk'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -56,22 +54,13 @@ async function handlePost(request: Request) {
     return NextResponse.json({ error: 'No courses found for this organisation' }, { status: 400 })
   }
 
-  // Try to read the PDF from disk
-  let pdfBase64: string | null = null
-  if (applicant.cvUrl) {
-    try {
-      const pdfPath = join(process.cwd(), 'public', applicant.cvUrl)
-      const pdfBuffer = await readFile(pdfPath)
-      pdfBase64 = pdfBuffer.toString('base64')
-    } catch {
-      // PDF not found - fall back to text
-    }
-  }
+  // Read PDF from DB (base64)
+  const pdfBase64 = applicant.cvData ?? null
 
   const courseList = orgCourses.map(c => `- ${c.name} (${c.level}): ${c.requirements}`).join('\n')
 
   const promptText = `You are an admissions assistant for a UK Further Education college.
-${pdfBase64 ? "The applicant's CV is attached as a PDF. Read it carefully." : applicant.cvText ? `Applicant CV:\n${applicant.cvText}` : 'No CV provided.'}
+${pdfBase64 ? "The applicant's CV is attached as a PDF. Read it carefully." : 'No CV provided.'}
 
 Assessment Scores:
 - English: ${applicant.assessmentEnglishScore !== null ? `${applicant.assessmentEnglishScore}/10` : 'Not yet taken'}

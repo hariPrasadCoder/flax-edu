@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { applicants } from '@/drizzle/schema'
 import { eq, and } from 'drizzle-orm'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 
 export async function POST(
   request: Request,
@@ -21,18 +19,10 @@ export async function POST(
   }
 
   const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+  const cvData = Buffer.from(bytes).toString('base64')
 
-  const uploadsDir = join(process.cwd(), 'public', 'uploads')
-  await mkdir(uploadsDir, { recursive: true })
-  const filename = `${params.applicantId}-${Date.now()}.pdf`
-  await writeFile(join(uploadsDir, filename), buffer)
-
-  const cvUrl = `/uploads/${filename}`
-
-  // Store URL only - AI reads the PDF directly during analysis
   await db.update(applicants)
-    .set({ cvUrl, cvText: null, updatedAt: new Date() })
+    .set({ cvData, cvUrl: null, cvText: null, updatedAt: new Date() })
     .where(eq(applicants.id, params.applicantId))
 
   return NextResponse.json({ success: true })
