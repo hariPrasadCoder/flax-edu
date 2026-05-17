@@ -19,7 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 type Applicant = {
   id: string; name: string; email: string; phone: string | null
-  status: string; source: string | null; cvUrl: string | null; cvText: string | null
+  status: string; source: string | null; cvUrl: string | null; cvText: string | null; hasCv: boolean
   assessmentDate: string | null; assessmentEnglishScore: number | null; assessmentMathScore: number | null
   interviewDate: string | null; matchedCourseId: string | null; interestedCourseId: string | null
   aiSuitabilityScore: number | null; aiSuitabilitySummary: string | null
@@ -467,7 +467,7 @@ export default function ApplicantDetailPage() {
                 <Brain className="w-8 h-8 text-gray-100 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">No analysis yet</p>
                 <p className="text-xs text-gray-300 mt-1">
-                  {applicant.cvUrl ? 'Click "Run Analysis" to match courses' : 'Upload a CV first for best results'}
+                  {applicant.hasCv ? 'Click "Run Analysis" to match courses' : 'Upload a CV first for best results'}
                 </p>
               </div>
             )}
@@ -482,13 +482,13 @@ export default function ApplicantDetailPage() {
                 <button onClick={() => fileRef.current?.click()} disabled={uploading}
                   className="text-xs text-[#473FCF] hover:underline flex items-center gap-1 font-medium">
                   {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                  {uploading ? 'Uploading…' : applicant.cvUrl ? 'Replace' : 'Upload CV'}
+                  {uploading ? 'Uploading…' : applicant.hasCv ? 'Replace' : 'Upload CV'}
                 </button>
               </div>
               <input ref={fileRef} type="file" accept="application/pdf" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) uploadCv(f) }} />
-              {applicant.cvUrl ? (
-                <a href={applicant.cvUrl} target="_blank" rel="noopener noreferrer"
+              {applicant.hasCv ? (
+                <a href={`/api/applicants/${id}/cv`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm text-[#473FCF] hover:underline">
                   <FileText className="w-4 h-4" /> View uploaded CV
                 </a>

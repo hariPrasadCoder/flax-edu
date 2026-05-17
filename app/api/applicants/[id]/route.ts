@@ -23,7 +23,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     .where(and(eq(applicants.id, params.id), eq(applicants.orgId, orgId)))
     .limit(1)
   if (!result[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(result[0])
+
+  // Strip cvData (large base64) — serve it via GET /api/applicants/[id]/cv instead
+  const { cvData, ...applicantWithoutCvData } = result[0].applicant
+  return NextResponse.json({
+    applicant: { ...applicantWithoutCvData, hasCv: !!cvData },
+    courseName: result[0].courseName,
+  })
 }
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
